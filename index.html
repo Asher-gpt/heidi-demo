@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heidi — AI Medical Scribe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset ─── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth; -webkit-font-smoothing: antialiased;
+      scroll-padding-top: 20vh;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--color-bark-900);
+      background: var(--color-sand-25);
+      line-height: 140%;
+      letter-spacing: -0.03em;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    button, input, select { font-family: inherit; }
+
+    /* ───────────────────────────────────────
+       EXACT Heidi Design Tokens (from source)
+    ─────────────────────────────────────── */
+    :root {
+      /* Sand */
+      --color-sand-25:  #fcfaf8;
+      --color-sand-50:  #f9f4f1;
+      --color-sand-75:  #f6efea;
+      --color-sand-100: #f6ece4;
+      --color-sand-150: #f4e7dd;
+      --color-sand-200: #f0dfd1;
+      --color-sand-300: #ecd7c6;
+      --color-sand-400: #e2cab6;
+      --color-sand-500: #dabfa9;
+      --color-sand-600: #d1af94;
+
+      /* Bark */
+      --color-bark-25:  #fbf9fa;
+      --color-bark-50:  #f4f0f2;
+      --color-bark-100: #e9e2e3;
+      --color-bark-200: #d4c4c9;
+      --color-bark-300: #c39da8;
+      --color-bark-400: #a98993;
+      --color-bark-500: #8a7078;
+      --color-bark-600: #755760;
+      --color-bark-700: #5b3e47;
+      --color-bark-800: #4c2934;
+      --color-bark-900: #28030f;
+      --color-bark-950: #211217;
+
+      /* Accent (Sunlight yellow — #FBF582 primary) */
+      --color-accent-50:  #fefde8;
+      --color-accent-100: #fdfac4;
+      --color-accent-200: #FBF582;
+      --color-accent-300: #fdf444;
+      --color-accent-400: #ebdf00;
+      --color-accent-500: #ccc200;
+      --color-accent-600: #999100;
+      --color-accent-700: #807900;
+      --color-accent-800: #666100;
+      --color-accent-900: #4d4900;
+      --color-accent-950: #2e2c05;
+
+      /* Sunlight */
+      --color-sunlight-50:  #fefde8;
+      --color-sunlight-100: #fdfac4;
+      --color-sunlight-200: #fbf582;
+      --color-sunlight-300: #fdf444;
+      --color-sunlight-400: #ebdf00;
+
+      /* Sky */
+      --color-sky-25:  #ebf2ff;
+      --color-sky-50:  #e0ebff;
+      --color-sky-500: #5b8df6;
+
+      /* Semantic */
+      --color-primary: var(--color-bark-900);
+      --color-accent: var(--color-accent-800);
+      --color-success: #16a34a;
+      --color-danger: #dc2626;
+      --color-warning: #ea580c;
+      --color-white: #fff;
+      --color-black: #000;
+
+      /* Shadows */
+      --shadow-color: 120 90 60;
+
+      /* Spacing */
+      --heading-letter-spacing: -0.05em;
+      --body-letter-spacing: -0.03em;
+
+      /* Radius */
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-2xl: 24px;
+      --radius-3xl: 36px;
+    }
+
+    /* ─── Typography ─── */
+    .heading {
+      font-family: Georgia, 'Times New Roman', serif;
+      letter-spacing: var(--heading-letter-spacing);
+      font-weight: 400;
+      color: var(--color-bark-900);
+    }
+
+    /* ─── Utilities ─── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .section   { padding: 112px 0; }
+
+    .section-label {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--color-accent-700);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(2rem, 4.5vw, 3.5rem);
+      font-weight: 400; line-height: 100%;
+      letter-spacing: var(--heading-letter-spacing);
+      color: var(--color-bark-900); margin-bottom: 16px;
+    }
+    .section-subtitle {
+      font-size: 1rem; color: var(--color-bark-600);
+      max-width: 540px; line-height: 140%;
+      letter-spacing: var(--body-letter-spacing);
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 14px 32px; border-radius: 50px; font-weight: 600;
+      font-size: 0.875rem; border: none; cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+      letter-spacing: var(--body-letter-spacing);
+    }
+    .btn-dark {
+      background: var(--color-bark-900); color: var(--color-white);
+    }
+    .btn-dark:hover {
+      background: var(--color-bark-800); transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgb(var(--shadow-color) / 0.15);
+    }
+    .btn-accent {
+      background: var(--color-accent-200); color: var(--color-bark-900);
+    }
+    .btn-accent:hover {
+      background: var(--color-accent-300); transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(251,245,130,0.4);
+    }
+    .btn-sand {
+      background: var(--color-sand-200); color: var(--color-bark-800);
+      border: 1px solid var(--color-bark-300);
+    }
+    .btn-sand:hover {
+      background: var(--color-sand-300); color: var(--color-bark-900);
+      border-color: var(--color-bark-400);
+    }
+    .btn-link {
+      background: none; border: none; color: var(--color-bark-900);
+      font-weight: 500; padding: 0; display: inline-flex;
+      align-items: center; gap: 6px; font-size: 1rem; cursor: pointer;
+      letter-spacing: var(--body-letter-spacing);
+    }
+    .btn-link:hover { color: var(--color-accent-600); }
+    .btn-link svg { transition: transform 0.15s; }
+    .btn-link:hover svg { transform: translateX(3px); }
+
+    /* ─── Announcement Bar ─── */
+    .announcement {
+      background: var(--color-danger); color: var(--color-white);
+      text-align: center; padding: 10px 16px; font-size: 0.8125rem;
+      font-weight: 500; letter-spacing: var(--body-letter-spacing);
+    }
+    .announcement strong { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+    .announcement a {
+      color: var(--color-white); font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* ─── Navbar ─── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--color-bark-900);
+      transition: box-shadow 0.15s cubic-bezier(0.4,0,0.2,1);
+    }
+    .navbar.scrolled { box-shadow: 0 4px 24px rgba(40,3,15,0.3); }
+    .navbar .container {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-left { display: flex; align-items: center; gap: 40px; }
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 1.375rem; font-weight: 700; color: var(--color-white);
+    }
+    .logo-icon {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--color-accent-600); display: flex;
+      align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 16px; height: 16px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: rgba(255,255,255,0.6); transition: color 0.15s;
+      letter-spacing: var(--body-letter-spacing);
+    }
+    .nav-links a:hover { color: var(--color-white); }
+    .nav-links .has-dd { display: flex; align-items: center; gap: 4px; }
+    .nav-links .has-dd::after {
+      content: ''; width: 0; height: 0;
+      border-left: 3.5px solid transparent; border-right: 3.5px solid transparent;
+      border-top: 3.5px solid rgba(255,255,255,0.4);
+    }
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+    .nav-right a.login {
+      font-size: 0.875rem; font-weight: 500; color: rgba(255,255,255,0.7);
+    }
+    .nav-right a.login:hover { color: var(--color-white); }
+    .nav-right .btn-accent { padding: 9px 22px; font-size: 0.8125rem; }
+
+    .mobile-toggle {
+      display: none; background: none; border: none; cursor: pointer;
+      width: 32px; height: 32px; position: relative;
+    }
+    .mobile-toggle span {
+      display: block; width: 20px; height: 2px; background: var(--color-white);
+      position: absolute; left: 6px; transition: all 0.2s; border-radius: 1px;
+    }
+    .mobile-toggle span:nth-child(1) { top: 9px; }
+    .mobile-toggle span:nth-child(2) { top: 15px; }
+    .mobile-toggle span:nth-child(3) { top: 21px; }
+    .mobile-toggle.active span:nth-child(1) { top: 15px; transform: rotate(45deg); }
+    .mobile-toggle.active span:nth-child(2) { opacity: 0; }
+    .mobile-toggle.active span:nth-child(3) { top: 15px; transform: rotate(-45deg); }
+
+    /* ─── Hero ─── */
+    .hero {
+      padding: 80px 0 112px; position: relative; overflow: hidden;
+      background: var(--color-sand-25);
+    }
+    .hero .container {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px;
+      align-items: center;
+    }
+    .hero-content h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(2.5rem, 5.5vw, 4.5rem); font-weight: 400;
+      line-height: 100%; color: var(--color-bark-900); margin-bottom: 24px;
+      letter-spacing: var(--heading-letter-spacing);
+    }
+    .hero-content h1 em { font-style: italic; }
+    .hero-content > p {
+      font-size: 1rem; color: var(--color-bark-600); line-height: 140%;
+      margin-bottom: 32px; max-width: 440px;
+    }
+    .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .hero-subtext {
+      font-size: 0.8125rem; color: var(--color-bark-500); margin-top: 16px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Hero Preview Card */
+    .hero-preview {
+      background: var(--color-white); border-radius: var(--radius-xl);
+      border: 1px solid var(--color-sand-200);
+      box-shadow: 0 1px 3px 1px rgb(var(--shadow-color) / 0.06),
+                  0 24px 64px rgb(var(--shadow-color) / 0.06);
+      overflow: hidden;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    .preview-top {
+      background: var(--color-bark-900); padding: 14px 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-dot.r { background: #ff5f57; }
+    .preview-dot.y { background: #febc2e; }
+    .preview-dot.g { background: #28c840; }
+    .preview-title {
+      font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.5);
+      margin-left: 8px;
+    }
+    .preview-body { padding: 24px; }
+    .preview-field { margin-bottom: 16px; }
+    .preview-field:last-of-type { margin-bottom: 0; }
+    .preview-field-label {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--color-accent-700); margin-bottom: 4px;
+    }
+    .preview-field-value {
+      font-size: 0.8125rem; color: var(--color-bark-600); line-height: 140%;
+    }
+    .preview-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--color-accent-50); color: var(--color-accent-700);
+      padding: 6px 14px; border-radius: 50px;
+      font-size: 0.6875rem; font-weight: 600; margin-top: 16px;
+    }
+    .pulse {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent-600);
+      animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    /* ─── Simulator ─── */
+    .simulator { background: var(--color-white); }
+    .simulator .section-header { text-align: center; margin-bottom: 56px; }
+    .simulator .section-subtitle { margin: 0 auto; }
+    .sim-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      max-width: 960px; margin: 0 auto;
+    }
+    .sim-card {
+      background: var(--color-sand-50); border-radius: var(--radius-xl);
+      padding: 28px; border: 1px solid var(--color-sand-200);
+    }
+    .sim-card-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--color-sand-200);
+    }
+    .sim-card-icon {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sim-card-icon.chat { background: var(--color-bark-50); color: var(--color-bark-700); }
+    .sim-card-icon.note { background: var(--color-accent-50); color: var(--color-accent-700); }
+    .sim-card-label { font-size: 0.875rem; font-weight: 600; color: var(--color-bark-900); }
+    .chat-bubble {
+      background: var(--color-white); border-radius: var(--radius-lg);
+      padding: 12px 16px; margin-bottom: 10px;
+      border: 1px solid var(--color-sand-200);
+    }
+    .chat-bubble.doctor {
+      background: var(--color-bark-50); border-color: var(--color-bark-200);
+      margin-left: 20px;
+    }
+    .chat-role {
+      font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 3px;
+    }
+    .chat-role.patient { color: var(--color-bark-500); }
+    .chat-role.doctor  { color: var(--color-bark-700); }
+    .chat-text { font-size: 0.8125rem; color: var(--color-bark-600); line-height: 140%; }
+    .note-section { margin-bottom: 14px; }
+    .note-section:last-child { margin-bottom: 0; }
+    .note-label {
+      font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--color-accent-700); margin-bottom: 3px;
+    }
+    .note-text {
+      font-size: 0.8125rem; color: var(--color-bark-600); line-height: 140%;
+      padding-left: 12px; border-left: 2px solid var(--color-accent-200);
+    }
+    .sim-live-label {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 28px; font-size: 0.8125rem;
+      color: var(--color-bark-500); font-weight: 500;
+    }
+    .pulse-ring {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--color-accent-600); position: relative;
+    }
+    .pulse-ring::after {
+      content: ''; position: absolute; inset: -4px;
+      border-radius: 50%; border: 2px solid var(--color-accent-500);
+      animation: ring 2s ease-in-out infinite;
+    }
+    @keyframes ring {
+      0%   { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    .sim-cta { text-align: center; margin-top: 44px; }
+
+    /* ─── How It Works ─── */
+    .how-it-works { background: var(--color-sand-50); }
+    .how-it-works .section-header { text-align: center; margin-bottom: 64px; }
+    .how-it-works .section-subtitle { margin: 0 auto; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .step-card {
+      text-align: center; padding: 36px 28px; border-radius: var(--radius-xl);
+      background: var(--color-white); border: 1px solid var(--color-sand-200);
+      transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+    }
+    .step-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 4px rgba(0,0,0,0.02), 0 12px 36px rgb(var(--shadow-color) / 0.06);
+    }
+    .step-number {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--color-accent-50);
+      display: flex; align-items: center; justify-content: center;
+      font-family: Georgia, serif; font-size: 1.375rem; color: var(--color-accent-700);
+      margin: 0 auto 20px;
+    }
+    .step-card h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.25rem; font-weight: 400; color: var(--color-bark-900);
+      margin-bottom: 10px; letter-spacing: var(--heading-letter-spacing);
+    }
+    .step-card p {
+      font-size: 0.875rem; color: var(--color-bark-600); line-height: 140%;
+    }
+
+    /* ─── Benefits ─── */
+    .benefits { background: var(--color-white); }
+    .benefits .container {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 72px;
+      align-items: center;
+    }
+    .benefits-text h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 400;
+      line-height: 110%; color: var(--color-bark-900); margin-bottom: 20px;
+      letter-spacing: var(--heading-letter-spacing);
+    }
+    .benefits-text > p {
+      font-size: 1rem; color: var(--color-bark-600);
+      line-height: 140%; margin-bottom: 28px;
+    }
+    .benefits-list { display: flex; flex-direction: column; gap: 14px; }
+    .benefit-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: 0.9375rem; color: var(--color-bark-900);
+    }
+    .benefit-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--color-accent-50); color: var(--color-accent-700);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    .benefits-visual {
+      background: var(--color-sand-50); border-radius: var(--radius-xl);
+      border: 1px solid var(--color-sand-200);
+      box-shadow: 0 1px 3px 1px rgb(var(--shadow-color) / 0.06);
+      padding: 32px; overflow: hidden;
+    }
+    .bv-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .bv-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--color-accent-700); color: var(--color-white);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bv-title { font-size: 0.9375rem; font-weight: 600; color: var(--color-bark-900); }
+    .bv-subtitle { font-size: 0.75rem; color: var(--color-bark-500); }
+    .bv-lines { display: flex; flex-direction: column; gap: 10px; }
+    .bv-line {
+      height: 10px; border-radius: 5px; background: var(--color-sand-200);
+      position: relative; overflow: hidden;
+    }
+    .bv-line::after {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, var(--color-accent-200), var(--color-accent-500));
+      border-radius: 5px; animation: fill 3s ease-in-out infinite;
+    }
+    .bv-line:nth-child(1) { width: 100%; }
+    .bv-line:nth-child(1)::after { width: 85%; }
+    .bv-line:nth-child(2) { width: 90%; }
+    .bv-line:nth-child(2)::after { width: 70%; animation-delay: 0.3s; }
+    .bv-line:nth-child(3) { width: 75%; }
+    .bv-line:nth-child(3)::after { width: 90%; animation-delay: 0.6s; }
+    .bv-line:nth-child(4) { width: 60%; }
+    .bv-line:nth-child(4)::after { width: 60%; animation-delay: 0.9s; }
+    @keyframes fill { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .bv-status {
+      margin-top: 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 0.8125rem; color: var(--color-accent-700); font-weight: 600;
+    }
+
+    /* ─── Free / Signup ─── */
+    .free-section { background: var(--color-sand-50); }
+    .free-section .container {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 72px;
+      align-items: center;
+    }
+    .free-text h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 400;
+      line-height: 110%; letter-spacing: var(--heading-letter-spacing);
+      color: var(--color-bark-900); margin-bottom: 16px;
+    }
+    .free-text p { font-size: 1rem; color: var(--color-bark-600); line-height: 140%; }
+    .signup-card {
+      background: var(--color-white); border-radius: var(--radius-xl);
+      border: 1px solid var(--color-sand-200);
+      box-shadow: 0 1px 3px 1px rgb(var(--shadow-color) / 0.06);
+      padding: 36px;
+    }
+    .signup-card h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.5rem; font-weight: 400; color: var(--color-bark-900);
+      margin-bottom: 24px; letter-spacing: var(--heading-letter-spacing);
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 0.8125rem; font-weight: 600;
+      color: var(--color-bark-900); margin-bottom: 6px;
+    }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px 16px; border-radius: var(--radius-md);
+      border: 1px solid var(--color-bark-200); font-size: 0.875rem;
+      color: var(--color-bark-900); background: var(--color-white);
+      transition: border-color 0.15s; outline: none;
+      letter-spacing: var(--body-letter-spacing);
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--color-accent-400);
+      box-shadow: 0 0 0 3px rgba(235,223,0,0.15);
+    }
+    .form-group input::placeholder { color: var(--color-bark-400); }
+    .signup-card .btn { width: 100%; margin-top: 4px; }
+    .signup-subtext {
+      text-align: center; font-size: 0.75rem; color: var(--color-bark-500);
+      margin-top: 12px;
+    }
+
+    /* ─── Trust ─── */
+    .trust { padding: 64px 0; background: var(--color-white); }
+    .trust-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .trust-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 24px; border-radius: var(--radius-lg);
+      background: var(--color-sand-50); border: 1px solid var(--color-sand-200);
+    }
+    .trust-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--color-accent-50); color: var(--color-accent-700);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .trust-item h4 { font-size: 0.875rem; font-weight: 600; color: var(--color-bark-900); }
+    .trust-item p  { font-size: 0.8125rem; color: var(--color-bark-600); margin-top: 2px; line-height: 140%; }
+
+    /* ─── Final CTA ─── */
+    .final-cta {
+      padding: 112px 0; text-align: center;
+      background: var(--color-sand-100); position: relative; overflow: hidden;
+    }
+    .final-cta::before {
+      content: ''; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(251,245,130,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .final-cta .container { position: relative; z-index: 1; }
+    .final-cta h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 400;
+      line-height: 100%; letter-spacing: var(--heading-letter-spacing);
+      color: var(--color-bark-900); margin-bottom: 16px;
+    }
+    .final-cta h2 em { font-style: italic; }
+    .final-cta p {
+      font-size: 1rem; color: var(--color-bark-600); margin-bottom: 32px;
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      background: var(--color-bark-900); color: rgba(255,255,255,0.45);
+      padding: 64px 0 40px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.3fr repeat(5, 1fr);
+      gap: 32px; padding-bottom: 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .footer-brand .footer-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 1.25rem; font-weight: 700; color: var(--color-white);
+      margin-bottom: 10px;
+    }
+    .footer-brand .footer-logo-icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--color-accent-600);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .footer-brand p { font-size: 0.8125rem; line-height: 140%; margin-bottom: 16px; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .footer-social a:hover { background: var(--color-accent-200); color: var(--color-bark-900); }
+    .footer-col h4 {
+      font-size: 0.8125rem; font-weight: 600; color: var(--color-white);
+      margin-bottom: 16px;
+    }
+    .footer-col a {
+      display: block; font-size: 0.8125rem; color: rgba(255,255,255,0.4);
+      margin-bottom: 10px; transition: color 0.15s;
+    }
+    .footer-col a:hover { color: var(--color-accent-200); }
+    .footer-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 28px; font-size: 0.75rem;
+    }
+
+    /* ─── Mobile Menu ─── */
+    .mobile-menu {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: var(--color-bark-900); padding: 20px 24px 24px; z-index: 99;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a {
+      display: block; padding: 12px 0; font-size: 0.9375rem;
+      font-weight: 500; color: rgba(255,255,255,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .mobile-menu a:hover { color: var(--color-white); }
+    .mobile-menu .btn-accent { width: 100%; margin-top: 16px; text-align: center; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .hero .container { grid-template-columns: 1fr; gap: 48px; }
+      .hero-content { text-align: center; }
+      .hero-content > p { margin-left: auto; margin-right: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-subtext { justify-content: center; }
+      .hero-preview { max-width: 480px; margin: 0 auto; }
+      .sim-grid { grid-template-columns: 1fr; max-width: 520px; }
+      .benefits .container { grid-template-columns: 1fr; gap: 48px; }
+      .free-section .container { grid-template-columns: 1fr; gap: 48px; }
+      .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-right .login { display: none; }
+      .mobile-toggle { display: block; }
+      .section { padding: 80px 0; }
+      .steps-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .hero { padding: 48px 0 64px; }
+      .hero-actions { flex-direction: column; width: 100%; }
+      .hero-actions .btn { width: 100%; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Animations ─── */
+    .typing-cursor::after {
+      content: '|'; animation: blink 1s step-end infinite;
+      color: var(--color-accent-700); font-weight: 400;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .fade-up {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="announcement">
+    Heidi launches <strong>Evidence and Insights Automation</strong> to assist in Care Platform.
+    <a href="#">Learn more &rarr;</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <span class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v18M5 8c0 0 3-2 7-2s7 2 7 2"/></svg>
+          </span>
+          Heidi
+        </a>
+        <ul class="nav-links">
+          <li><a href="#simulator" class="has-dd">Platform</a></li>
+          <li><a href="#how-it-works" class="has-dd">Resources</a></li>
+          <li><a href="#">Enterprise</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#">Chat with us</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <a href="#" class="login">Log in</a>
+        <a href="#signup" class="btn btn-accent">Get Heidi Free</a>
+      </div>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#simulator">Platform</a>
+    <a href="#how-it-works">Resources</a>
+    <a href="#">Enterprise</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#">Chat with us</a>
+    <a href="#">Log in</a>
+    <a href="#signup" class="btn btn-accent">Get Heidi Free</a>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content fade-up">
+        <p class="section-label">AI Medical Scribe</p>
+        <h1>Clinic Ends.<br><em>Your Day Should Too.</em></h1>
+        <p>Experience documentation that drafts in real time during consultations, so your notes are finished when you are.</p>
+        <div class="hero-actions">
+          <a href="#signup" class="btn btn-dark">Try Heidi Free</a>
+          <a href="#simulator" class="btn-link">
+            See how it works
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <p class="hero-subtext">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          No credit card required. HIPAA-ready.
+        </p>
+      </div>
+      <div class="hero-preview fade-up">
+        <div class="preview-top">
+          <span class="preview-dot r"></span>
+          <span class="preview-dot y"></span>
+          <span class="preview-dot g"></span>
+          <span class="preview-title">Clinical Note — Draft</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-field">
+            <div class="preview-field-label">Subjective</div>
+            <div class="preview-field-value">Patient reports persistent cough for five days with associated fatigue. Denies fever, chest pain, or shortness of breath.</div>
+          </div>
+          <div class="preview-field">
+            <div class="preview-field-label">Assessment</div>
+            <div class="preview-field-value">Likely viral upper respiratory infection<span class="typing-cursor"></span></div>
+          </div>
+          <div class="preview-field">
+            <div class="preview-field-label">Plan</div>
+            <div class="preview-field-value">Supportive care. Rest, hydration, symptom monitoring.</div>
+          </div>
+          <div class="preview-badge"><span class="pulse"></span> Generating in real time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Simulator -->
+  <section class="simulator section" id="simulator">
+    <div class="container">
+      <div class="section-header fade-up">
+        <p class="section-label">Live Preview</p>
+        <h2 class="section-title">Watch a Consultation Turn<br>Into a Clinical Note</h2>
+        <p class="section-subtitle">See how Heidi transforms a conversation into a structured clinical note in real time.</p>
+      </div>
+      <div class="sim-grid fade-up">
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <div class="sim-card-icon chat"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+            <span class="sim-card-label">Patient Consultation</span>
+          </div>
+          <div class="chat-bubble"><div class="chat-role patient">Patient</div><div class="chat-text">I've had a persistent cough for about five days. I feel tired but no fever.</div></div>
+          <div class="chat-bubble doctor"><div class="chat-role doctor">Clinician</div><div class="chat-text">Any shortness of breath, chest pain, or sore throat?</div></div>
+          <div class="chat-bubble"><div class="chat-role patient">Patient</div><div class="chat-text">No chest pain. Slight sore throat in the mornings, but it goes away.</div></div>
+          <div class="chat-bubble doctor"><div class="chat-role doctor">Clinician</div><div class="chat-text">Are you on any medications or have any known allergies?</div></div>
+          <div class="chat-bubble"><div class="chat-role patient">Patient</div><div class="chat-text">No allergies. I take a daily multivitamin, nothing else.</div></div>
+        </div>
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <div class="sim-card-icon note"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="sim-card-label">Generated Clinical Note</span>
+          </div>
+          <div class="note-section"><div class="note-label">Subjective</div><div class="note-text">Patient reports persistent cough for five days with fatigue. Mild morning sore throat, self-resolving. Denies fever, chest pain, or shortness of breath. No known allergies. Current medication: daily multivitamin.</div></div>
+          <div class="note-section"><div class="note-label">Objective</div><div class="note-text">No fever reported. No acute respiratory distress noted.</div></div>
+          <div class="note-section"><div class="note-label">Assessment</div><div class="note-text">Likely viral upper respiratory infection.</div></div>
+          <div class="note-section"><div class="note-label">Plan</div><div class="note-text">Rest, adequate hydration, monitor symptoms. Return if symptoms worsen or persist beyond 10 days<span class="typing-cursor"></span></div></div>
+        </div>
+      </div>
+      <div class="sim-live-label fade-up"><span class="pulse-ring"></span> Heidi is generating this note live</div>
+      <div class="sim-cta fade-up"><a href="#signup" class="btn btn-dark">Try This in Your Own Workflow</a></div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header fade-up">
+        <p class="section-label">Simple Setup</p>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle" style="margin:0 auto;">Three steps. No disruption to your clinical workflow.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card fade-up"><div class="step-number">1</div><h3>Start the Consultation</h3><p>Heidi listens securely during the patient visit. No extra setup or hardware needed.</p></div>
+        <div class="step-card fade-up"><div class="step-number">2</div><h3>Notes Draft Automatically</h3><p>Clinical documentation forms in real time as the conversation unfolds.</p></div>
+        <div class="step-card fade-up"><div class="step-number">3</div><h3>Review &amp; Finalize</h3><p>Edit and approve your notes before saving. You always remain in control.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="benefits section">
+    <div class="container">
+      <div class="benefits-text fade-up">
+        <p class="section-label">Why Heidi</p>
+        <h2>Spend More Time<br>With Patients.<br>Less Time Charting.</h2>
+        <p>Heidi reduces documentation workload so you can focus on what matters most — your patients. Real-time note generation means no more late-night charting sessions or weekend catch-up.</p>
+        <div class="benefits-list">
+          <div class="benefit-item"><span class="benefit-check"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Saves 2+ hours of documentation per day</div>
+          <div class="benefit-item"><span class="benefit-check"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Notes ready before the patient leaves the room</div>
+          <div class="benefit-item"><span class="benefit-check"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Reduces clinician burnout and after-hours work</div>
+          <div class="benefit-item"><span class="benefit-check"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Structured SOAP notes generated automatically</div>
+        </div>
+      </div>
+      <div class="benefits-visual fade-up">
+        <div class="bv-header"><div class="bv-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="bv-title">Clinical Note — Generating</div><div class="bv-subtitle">Patient visit #847 &middot; Today, 2:34 PM</div></div></div>
+        <div class="bv-lines"><div class="bv-line"></div><div class="bv-line"></div><div class="bv-line"></div><div class="bv-line"></div></div>
+        <div class="bv-status"><span class="pulse"></span>Documentation drafting in progress…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Free / Signup -->
+  <section class="free-section section" id="pricing">
+    <div class="container">
+      <div class="free-text fade-up"><p class="section-label">Get Started</p><h2>Start Free.<br>No Commitment.</h2><p>Try Heidi's real-time documentation workflow using the free version. Experience how it fits into your practice before making any decisions.</p></div>
+      <div class="signup-card fade-up" id="signup">
+        <h3>Create Your Free Account</h3>
+        <form onsubmit="event.preventDefault();">
+          <div class="form-group"><label for="email">Work Email</label><input type="email" id="email" placeholder="you@clinic.com" required /></div>
+          <div class="form-group"><label for="role">Role</label><select id="role" required><option value="" disabled selected>Select your role</option><option value="gp">General Practitioner</option><option value="specialist">Specialist</option><option value="other">Other</option></select></div>
+          <div class="form-group"><label for="practice">Practice Type <span style="color:var(--color-bark-400);font-weight:400;">(optional)</span></label><input type="text" id="practice" placeholder="e.g. Family Medicine" /></div>
+          <button type="submit" class="btn btn-dark">Try Heidi Free</button>
+          <p class="signup-subtext">No credit card required.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust -->
+  <section class="trust">
+    <div class="container">
+      <div class="trust-grid fade-up">
+        <div class="trust-item"><div class="trust-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><h4>Fits Existing Systems</h4><p>Designed to integrate into your current clinical workflow with zero disruption.</p></div></div>
+        <div class="trust-item"><div class="trust-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div><div><h4>Built for Clinicians</h4><p>Purpose-built for clinical documentation, not adapted from generic tools.</p></div></div>
+        <div class="trust-item"><div class="trust-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><h4>You Control Every Note</h4><p>Review, edit, and approve every note before it's finalized.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <div class="container fade-up">
+      <p class="section-label" style="text-align:center;">Ready?</p>
+      <h2>Finish Clinic.<br><em>Actually Finish.</em></h2>
+      <p>Join thousands of clinicians reclaiming their evenings.</p>
+      <a href="#signup" class="btn btn-dark" style="padding:16px 40px;font-size:0.9375rem;">Start Free</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo"><span class="footer-logo-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v18M5 8c0 0 3-2 7-2s7 2 7 2"/></svg></span>Heidi</div>
+          <p>Heidi. By your side.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z"/></svg></a>
+            <a href="#" aria-label="X"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col"><h4>Specialties</h4><a href="#">Family Medicine</a><a href="#">Specialists</a><a href="#">Nurses</a><a href="#">Mental Health</a><a href="#">Allied Health</a></div>
+        <div class="footer-col"><h4>Compliance</h4><a href="#">Safety</a><a href="#">Trust Center</a><a href="#">AICPA</a><a href="#">GDPR</a><a href="#">HIPAA</a></div>
+        <div class="footer-col"><h4>Product</h4><a href="#">Pricing</a><a href="#">Changelog</a><a href="#">Downloads</a><a href="#">Heidi Guides</a><a href="#">Help Centre</a></div>
+        <div class="footer-col"><h4>About Us</h4><a href="#">Contact Us</a><a href="#">Company</a><a href="#">Customer Stories</a><a href="#">Media</a><a href="#">Careers</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Usage Policy</a><a href="#">Accessibility</a></div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Heidi. All rights reserved.</span>
+        <span style="color:rgba(255,255,255,0.25);">AI-powered clinical documentation</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 10));
+    const toggle = document.getElementById('mobileToggle');
+    const menu = document.getElementById('mobileMenu');
+    toggle.addEventListener('click', () => { toggle.classList.toggle('active'); menu.classList.toggle('open'); });
+    menu.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { toggle.classList.remove('active'); menu.classList.remove('open'); }));
+    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+  </script>
+</body>
+</html>
